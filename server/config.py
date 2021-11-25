@@ -4,12 +4,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Config:
-    def __init__(self):
-        self.hostname = 'localhost'
-        self.port = 2020
-        self.databases = {
-            "panama": "databases/panama"
-        }
+    def __init__(self, hostname: str = None, port: int = None):
+        self.hostname = hostname
+        self.port = port
 
     def load(self, path: str) -> None:
         with open(path) as json_file:
