@@ -8,11 +8,20 @@ class OneKeyOneFileStorage(KVStorage):
         self.directory = directory
 
     def get(self, key):
-        value = (self.directory / key).read_text('utf-8')
+        try:
+            value = (self.directory / key).read_text('utf-8')
+        except FileNotFoundError:
+            return None
         return value
 
     def insert(self, key, value):
-        (self.directory / key).write_text(value)
+        try:
+            (self.directory / key).write_text(value)
+        except FileNotFoundError:
+            pass
 
     def delete(self, key):
-        (self.directory / key).unlink()
+        try:
+            (self.directory / key).unlink()
+        except FileNotFoundError:
+            pass
