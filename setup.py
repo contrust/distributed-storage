@@ -1,8 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='kvstorage',
+    name='distributed-storage',
     version='0.1.0',
-    packages=find_packages(include=['kvserver',
-                                    'kvserver.*']),
+    packages=['kvstorage', 'server']
 )
