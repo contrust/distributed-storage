@@ -43,7 +43,7 @@ class HashRing:
         for node in nodes:
             self.add_node(node)
 
-    def find_node_for_bytes(self, data: str):
+    def find_node_for_string(self, data: str):
         data = data.encode('utf-8')
         key_hash = HashRing.hash_to_32bit_int(data)
         if self.keys:

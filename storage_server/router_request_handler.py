@@ -14,7 +14,7 @@ class RouterRequestHandler(RequestHandler):
     async def handle_get_request(self, request: aiohttp.request):
         dbname = request.match_info.get('dbname')
         key = request.match_info.get('key')
-        node = self.hash_ring.find_node_for_bytes(key)
+        node = self.hash_ring.find_node_for_string(key)
         async with aiohttp.ClientSession() as session:
             async with session.get(f'http://{node}/{dbname}/{key}') as resp:
                 value = await resp.text()
@@ -25,7 +25,7 @@ class RouterRequestHandler(RequestHandler):
     async def handle_post_request(self, request: aiohttp.request):
         dbname = request.match_info.get('dbname')
         key = request.match_info.get('key')
-        node = self.hash_ring.find_node_for_bytes(key)
+        node = self.hash_ring.find_node_for_string(key)
         async with aiohttp.ClientSession() as session:
             async with session.post(f'http://{node}/{dbname}/{key}',
                                     data=await request.read()) as resp:
@@ -34,7 +34,7 @@ class RouterRequestHandler(RequestHandler):
     async def handle_delete_request(self, request: aiohttp.request):
         dbname = request.match_info.get('dbname')
         key = request.match_info.get('key')
-        node = self.hash_ring.find_node_for_bytes(key)
+        node = self.hash_ring.find_node_for_string(key)
         async with aiohttp.ClientSession() as session:
             async with session.delete(
                     f'http://{node}/{dbname}/{key}') as resp:
