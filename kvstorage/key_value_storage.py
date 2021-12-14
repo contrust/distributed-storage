@@ -15,3 +15,7 @@ class KVStorage(ABC):
     @abstractmethod
     def delete(self, key: str) -> None:
         pass
+
+    @abstractmethod
+    def traverse_keys(self):
+        pass

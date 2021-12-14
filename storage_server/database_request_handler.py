@@ -1,7 +1,9 @@
 import aiohttp
+import json
+import requests
 from aiohttp import web
 from kvstorage.one_key_one_file_storage import KVStorage
-from server.request_handler import RequestHandler
+from storage_server.request_handler import RequestHandler
 
 
 class DatabaseRequestHandler(RequestHandler):
@@ -32,3 +34,9 @@ class DatabaseRequestHandler(RequestHandler):
             self.databases[dbname].delete(key)
             return web.Response(status=200)
         return web.Response(status=400)
+
+    async def handle_patch_request(self, request: aiohttp.request):
+        migrations = await request.json()
+        print(migrations, self.databases)
+        return web.Response(status=200)
+

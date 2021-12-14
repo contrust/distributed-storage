@@ -36,8 +36,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def main():
-    args = vars(parse_arguments())
+def main(args):
     url = f'http://{args["hostname"]}:{args["port"]}/' \
           f'{args["database"]}/{args["key"]}'
     if args['GET']:
@@ -50,4 +49,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    arguments = vars(parse_arguments())
+    main(arguments)
