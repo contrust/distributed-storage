@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import pickle
+import pprint
 import sys
+import time
 from pathlib import Path
+from sys import argv
 
-from aiohttp import web
+import requests
 
+from consistent_hashing.hash_ring import HashRing
 from kvstorage.one_key_one_file_storage import OneKeyOneFileStorage
 from storage_server.database_config import DatabaseConfig
 from storage_server.database_request_handler import DatabaseRequestHandler
 from storage_server.router_config import RouterConfig
 from storage_server.router_request_handler import RouterRequestHandler
+from storage_server.server import run_server
 
 
 def parse_arguments():
@@ -18,17 +24,20 @@ def parse_arguments():
         prog=None if not globals().get('__spec__')
         else f'python3 -m {__spec__.name.partition(".")[0]}'
     )
-    parser.add_argument('-u', '--update',
-                        metavar='NEW_HASH_RING_FILE_PATH',
-                        help='update hash ring.')
-    server_type = parser.add_mutually_exclusive_group(required=True)
+    parser.add_argument('-u',
+                        nargs=2,
+                        metavar=(
+                            'OLD_HASH_RING_FILE', 'NEW_HASH_RING_FILE')),
+    server_type = parser.add_mutually_exclusive_group(
+        required=('-u' not in argv))
     server_type.add_argument('-db', '--database',
                              action='store_true',
                              help='define database server.')
     server_type.add_argument('-rt', '--router',
                              action='store_true',
                              help='define router server.')
-    actions = parser.add_mutually_exclusive_group(required=True)
+    actions = parser.add_mutually_exclusive_group(
+        required=('-db' in argv or '-rt' in argv))
     actions.add_argument('-r', '--run',
                          metavar='CONFIG_FILE',
                          required=False,
@@ -43,6 +52,50 @@ def parse_arguments():
 def main():
     args_dict = vars(parse_arguments())
     config = DatabaseConfig() if args_dict['database'] else RouterConfig()
+    if args_dict['u']:
+        with open(args_dict['u'][0], 'rb') as inp:
+            old_ring = pickle.load(inp)
+        with open(args_dict['u'][1], 'rb') as inp:
+            new_ring = pickle.load(inp)
+        migrations = \
+            HashRing.get_keys_migrations_for_new_nodes_from_old_nodes(old_ring,
+                                                                      new_ring)
+        print(old_ring.keys)
+        old_nodes = list(old_ring.nodes.keys())
+        new_nodes = list(new_ring.nodes.keys())
+        old_hosts_ranges = old_ring.get_nodes_ranges()
+        old_hosts_replicas = old_ring.nodes_replicas
+        new_hosts_ranges = new_ring.get_nodes_ranges()
+        new_hosts_replicas = new_ring.nodes_replicas
+        diff_nodes = set()
+        for node in new_nodes:
+            if node not in old_nodes or old_ring.nodes[node] != new_ring.nodes[node]:
+                diff_nodes.add(node)
+        new_diff_nodes_ranges = {}
+        for node in diff_nodes:
+            new_diff_nodes_ranges[node] = new_hosts_ranges[node]
+        for host in old_nodes:
+            host_ranges = old_hosts_ranges[host]
+            host_replicas = old_hosts_replicas[host]
+            message = {'method': 'delete_ranges_from_nodes',
+                       'nodes': host_replicas,
+                       'ranges': host_ranges}
+            requests.patch(f'http://{host}/', json.dumps(message))
+        for host in old_nodes:
+            print(host, old_hosts_ranges[host], new_hosts_ranges)
+            message = {'method': 'migrate_ranges_to_nodes',
+                       'zones': old_hosts_ranges[host],
+                       'migration': new_hosts_ranges}
+            requests.patch(f'http://{host}/', json.dumps(message))
+        for host in new_nodes:
+            host_ranges = new_hosts_ranges[host]
+            host_replicas = new_hosts_replicas[host]
+            print(host, host_replicas)
+            message = {'method': 'add_ranges_to_nodes',
+                       'nodes': host_replicas,
+                       'ranges': host_ranges}
+            requests.patch(f'http://{host}/', json.dumps(message))
+        sys.exit()
     if args_dict['get_config']:
         try:
             if args_dict['database']:
@@ -63,14 +116,7 @@ def main():
         with open(config.hash_ring_path, 'rb') as inp:
             ring = pickle.load(inp)
         handler = RouterRequestHandler(ring)
-    app = web.Application()
-    routes = [web.get('/{dbname}/{key}', handler.handle_get_request),
-              web.post('/{dbname}/{key}', handler.handle_post_request),
-              web.delete('/{dbname}/{key}', handler.handle_delete_request)]
-    if args_dict['database']:
-        routes.append(web.patch('/', handler.handle_patch_request))
-    app.add_routes(routes)
-    web.run_app(app, host=config.hostname, port=config.port)
+    run_server(handler=handler, hostname=config.hostname, port=config.port)
 
 
 if __name__ == '__main__':
