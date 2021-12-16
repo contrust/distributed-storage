@@ -8,10 +8,11 @@ from sys import argv
 import requests
 from aiohttp import web
 
-from server.request_handler import RequestHandler
 from database.one_key_one_file_storage import OneKeyOneFileStorage
+from hashring.__main__ import load_ring, unload_ring
 from server.database_config import DatabaseConfig
 from server.database_request_handler import DatabaseRequestHandler
+from server.request_handler import RequestHandler
 from server.router_config import RouterConfig
 from server.router_request_handler import RouterRequestHandler
 
@@ -21,24 +22,24 @@ def parse_arguments():
         prog=None if not globals().get('__spec__')
         else f'python3 -m {__spec__.name.partition(".")[0]}'
     )
+    methods = parser.add_mutually_exclusive_group(
+        required=True)
+    methods.add_argument('-u', '--update',
+                         metavar=tuple(['host', 'hash_ring_file']),
+                         nargs=2,
+                         help='update router\'s hash ring')
+    methods.add_argument('-r', '--run',
+                         metavar='input_file',
+                         help='run server with config')
+    methods.add_argument('-g', '--get-config',
+                         metavar='output_file',
+                         help='get config file')
     server_type = parser.add_mutually_exclusive_group(
-        required=('-u' not in argv))
+        required=('-u' not in argv and '--update' not in argv))
     server_type.add_argument('-db', '--database',
                              action='store_true')
     server_type.add_argument('-rt', '--router',
                              action='store_true')
-    actions = parser.add_mutually_exclusive_group(
-        required=('-db' in argv or '-rt' in argv))
-    actions.add_argument('-r', '--run',
-                         metavar='input_file',
-                         help='run server with config')
-    actions.add_argument('-g', '--get-config',
-                         metavar='output_file',
-                         help='get config file')
-    actions.add_argument('-u', '--update',
-                         metavar=tuple(['host', 'hash_ring_file']),
-                         nargs=2,
-                         help='update router\'s hash ring')
     return parser.parse_args()
 
 
@@ -57,9 +58,9 @@ def main():
     config = DatabaseConfig() if args_dict['database'] else RouterConfig()
     if args_dict['update']:
         host = args_dict['update'][0]
-        with open(args_dict['update'][1], 'rb') as inp:
-            new_ring = pickle.load(inp)
-        message = new_ring.__dict__
+        input_file = args_dict['update'][1]
+        ring = load_ring(input_file)
+        message = ring.__dict__
         requests.patch(f'http://{host}/', json.dumps(message))
         sys.exit()
     if args_dict['get_config']:
@@ -86,8 +87,7 @@ def main():
         run_server(handler=handler, hostname=config.hostname, port=config.port)
     finally:
         if args_dict['router']:
-            with open(config.hash_ring_path, 'wb') as out:
-                pickle.dump(handler.hash_ring, out, pickle.HIGHEST_PROTOCOL)
+            unload_ring(handler.hash_ring, config.hash_ring_path)
 
 
 if __name__ == '__main__':

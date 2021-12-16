@@ -20,15 +20,13 @@ def parse_arguments():
                          help='create new hash ring')
     methods.add_argument('-a', '--add-host',
                          metavar=tuple(["host",
-                                        "input_file",
-                                        "output_file"]),
-                         nargs=3,
+                                        "input_file"]),
+                         nargs=2,
                          help='add host to ring')
     methods.add_argument('-r', '--remove-host',
                          metavar=tuple(["host",
-                                        "input_file",
-                                        "output_file"]),
-                         nargs=3,
+                                        "input_file"]),
+                         nargs=2,
                          help='remove host from ring')
     methods.add_argument('-i', '--info',
                          metavar="input_file",
@@ -58,26 +56,24 @@ def main():
     if args_dict['add_host']:
         host = args_dict['add_host'][0]
         input_file = args_dict['add_host'][1]
-        output_file = args_dict['add_host'][2]
         ring = load_ring(input_file)
         try:
             ring.add_node(host)
         except ValueError:
             print('Can not add node because it is already in ring')
             sys.exit()
-        unload_ring(ring, output_file)
+        unload_ring(ring, input_file)
         print(f'Successfully added node {host}')
     elif args_dict['remove_host']:
         host = args_dict['remove_host'][0]
         input_file = args_dict['remove_host'][1]
-        output_file = args_dict['remove_host'][2]
         ring = load_ring(input_file)
         try:
             ring.remove_node(host)
         except ValueError:
             print('Can not remove node because it is not in ring')
             sys.exit()
-        unload_ring(ring, output_file)
+        unload_ring(ring, input_file)
         print(f'Successfully removed node {host}')
     elif args_dict['create']:
         number_of_keys_for_node = int(args_dict['create'][0])

@@ -13,10 +13,9 @@ class HashRing:
         self.replicas_number = replicas_number
         self.nodes_replicas = {}
         self.keys = {}
-        self.nodes = {}
-        if nodes:
-            for node in nodes:
-                self.add_node(node)
+        self.nodes = list(nodes) if nodes else []
+        for node in self.nodes:
+            self.add_node(node)
 
     def get_nodes_ranges(self):
         nodes_ranges = {}
@@ -55,18 +54,8 @@ class HashRing:
                 number = random.randint(0, 2 ** 32)
                 if number not in self.keys:
                     self.keys[number] = node
-            self.nodes[node] = random.randint(0, 2 ** 32)
-            self.keys = {x: y for x, y in sorted(self.keys.items())}
-            nodes_list = list(self.nodes.keys())
-            for i in range(len(nodes_list)):
-                self.nodes_replicas[nodes_list[i]] = []
-                for j in range(1, self.replicas_number + 1):
-                    next_node = nodes_list[(i + j) % len(nodes_list)]
-                    if next_node in self.nodes_replicas[
-                        nodes_list[i]] or next_node == nodes_list[i]:
-                        break
-                    self.nodes_replicas[nodes_list[i]].append(next_node)
-
+            self.nodes.append(node)
+            self._update_replicas()
         else:
             raise ValueError
 
@@ -75,16 +64,18 @@ class HashRing:
             for ring_key in list(self.keys.keys()):
                 if self.keys[ring_key] == node:
                     del self.keys[ring_key]
-            del self.nodes[node]
-            self.keys = {x: y for x, y in sorted(self.keys.items())}
-            nodes_list = list(self.nodes.keys())
-            for i in range(len(nodes_list)):
-                self.nodes_replicas[nodes_list[i]] = []
-                for j in range(1, self.replicas_number + 1):
-                    next_node = nodes_list[(i + j) % len(nodes_list)]
-                    if next_node in self.nodes_replicas[
-                        nodes_list[i]] or next_node == nodes_list[i]:
-                        break
-                    self.nodes_replicas[nodes_list[i]].append(next_node)
+            self.nodes.remove(node)
+            self._update_replicas()
         else:
             raise ValueError
+
+    def _update_replicas(self):
+        self.keys = {x: y for x, y in sorted(self.keys.items())}
+        for i in range(len(self.nodes)):
+            self.nodes_replicas[self.nodes[i]] = []
+            for j in range(1, self.replicas_number + 1):
+                next_node = self.nodes[(i + j) % len(self.nodes)]
+                if next_node in self.nodes_replicas[self.nodes[i]] or \
+                        next_node == self.nodes[i]:
+                    break
+                self.nodes_replicas[self.nodes[i]].append(next_node)

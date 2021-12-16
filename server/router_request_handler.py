@@ -67,13 +67,11 @@ class RouterRequestHandler(RequestHandler):
         new_ring = HashRing()
         new_ring.__dict__.update(message)
         old_ring = self.hash_ring
-        old_nodes = list(old_ring.nodes.keys())
-        new_nodes = list(new_ring.nodes.keys())
         old_hosts_ranges = old_ring.get_nodes_ranges()
         old_hosts_replicas = old_ring.nodes_replicas
         new_hosts_ranges = new_ring.get_nodes_ranges()
         new_hosts_replicas = new_ring.nodes_replicas
-        for host in old_nodes:
+        for host in old_ring.nodes:
             for replica in old_hosts_replicas[host]:
                 message = {'method': 'add_ranges_to_host',
                            'host': host,
@@ -82,8 +80,8 @@ class RouterRequestHandler(RequestHandler):
                 message = {'method': 'delete_ranges',
                            'ranges': old_hosts_ranges[host]}
                 requests.patch(f'http://{replica}/', json.dumps(message))
-        for host in old_nodes:
-            for new_host in new_nodes:
+        for host in old_ring.nodes:
+            for new_host in new_ring.nodes:
                 if new_host != host:
                     message = {'method': 'add_ranges_to_host',
                                'host': new_host,
@@ -92,7 +90,7 @@ class RouterRequestHandler(RequestHandler):
                     message = {'method': 'delete_ranges',
                                'ranges': new_hosts_ranges[new_host]}
                     requests.patch(f'http://{host}/', json.dumps(message))
-        for host in new_nodes:
+        for host in new_ring.nodes:
             for replica in new_hosts_replicas[host]:
                 message = {'method': 'add_ranges_to_host',
                            'host': replica,
