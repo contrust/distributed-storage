@@ -1,5 +1,5 @@
-from kvstorage.key_value_storage import KVStorage
-from storage_server.config import Config
+from database.key_value_storage import KVStorage
+from server.config import Config
 
 
 class DatabaseConfig(Config):

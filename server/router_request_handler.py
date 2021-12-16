@@ -1,8 +1,8 @@
 import aiohttp
 from aiohttp import web
 
-from consistent_hashing.hash_ring import HashRing
-from storage_server.request_handler import RequestHandler
+from hashring.hashring import HashRing
+from server.request_handler import RequestHandler
 
 
 class RouterRequestHandler(RequestHandler):

@@ -3,11 +3,11 @@ import os
 import pathlib
 import shutil
 
-import storage_server
-from kvstorage.one_key_one_file_storage import OneKeyOneFileStorage
-from storage_server.database_request_handler import DatabaseRequestHandler
-from storage_server.router_request_handler import RouterRequestHandler
-from storage_server.server import run_server
+import server
+from database.one_key_one_file_storage import OneKeyOneFileStorage
+from server.database_request_handler import DatabaseRequestHandler
+from server.router_request_handler import RouterRequestHandler
+from server.server import run_server
 
 
 @pytest.fixture(scope="function")

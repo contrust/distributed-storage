@@ -3,7 +3,7 @@ import argparse
 import pickle
 import sys
 
-from consistent_hashing.hash_ring import HashRing
+from hashring.hashring import HashRing
 
 
 def parse_arguments():
@@ -40,7 +40,7 @@ def main():
         with open(args_dict['get'], 'rb') as inp:
             ring = pickle.load(inp)
     else:
-        ring = HashRing([], 5, 1)
+        ring = HashRing([], 100, 1)
     if args_dict['add']:
         try:
             ring.add_node(args_dict['add'])

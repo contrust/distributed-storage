@@ -2,9 +2,9 @@ import aiohttp
 import requests
 from aiohttp import web
 
-from consistent_hashing.hash_ring import HashRing, hash_to_32bit_int
-from kvstorage.one_key_one_file_storage import KVStorage
-from storage_server.request_handler import RequestHandler
+from hashring.hashring import HashRing, hash_to_32bit_int
+from database.one_key_one_file_storage import KVStorage
+from server.request_handler import RequestHandler
 
 
 class DatabaseRequestHandler(RequestHandler):
@@ -44,7 +44,7 @@ class DatabaseRequestHandler(RequestHandler):
             ranges = message['ranges']
             for dbname, database in self.databases.items():
                 for key in database.traverse_keys():
-                    key_hash = HashRing.hash_to_32bit_int(key.encode('utf-8'))
+                    key_hash = hash_to_32bit_int(key.encode('utf-8'))
                     for tuple_range in ranges:
                         start = tuple_range[0]
                         end = tuple_range[1]
@@ -60,7 +60,7 @@ class DatabaseRequestHandler(RequestHandler):
             zones = message['zones']
             for dbname, database in self.databases.items():
                 for key in database.traverse_keys():
-                    key_hash = HashRing.hash_to_32bit_int(key.encode('utf-8'))
+                    key_hash = hash_to_32bit_int(key.encode('utf-8'))
                     key_in_zone = False
                     for tuple_range in zones:
                         start = tuple_range[0]

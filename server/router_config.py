@@ -1,4 +1,4 @@
-from storage_server.config import Config
+from server.config import Config
 
 
 class RouterConfig(Config):

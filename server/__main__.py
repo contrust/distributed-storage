@@ -1,22 +1,19 @@
-#!/usr/bin/env python3
 import argparse
 import json
 import pickle
-import pprint
 import sys
-import time
 from pathlib import Path
 from sys import argv
 
 import requests
+from aiohttp import web
 
-from consistent_hashing.hash_ring import HashRing
-from kvstorage.one_key_one_file_storage import OneKeyOneFileStorage
-from storage_server.database_config import DatabaseConfig
-from storage_server.database_request_handler import DatabaseRequestHandler
-from storage_server.router_config import RouterConfig
-from storage_server.router_request_handler import RouterRequestHandler
-from storage_server.server import run_server
+from server.request_handler import RequestHandler
+from database.one_key_one_file_storage import OneKeyOneFileStorage
+from server.database_config import DatabaseConfig
+from server.database_request_handler import DatabaseRequestHandler
+from server.router_config import RouterConfig
+from server.router_request_handler import RouterRequestHandler
 
 
 def parse_arguments():
@@ -41,12 +38,22 @@ def parse_arguments():
     actions.add_argument('-r', '--run',
                          metavar='CONFIG_FILE',
                          required=False,
-                         help='run storage_server with given config.')
+                         help='run server with given config.')
     actions.add_argument('-g', '--get-config',
                          metavar='OUTPUT_FILE',
                          required=False,
                          help='get config file in given path.')
     return parser.parse_args()
+
+
+def run_server(handler: RequestHandler, hostname: str, port: int):
+    app = web.Application()
+    app.add_routes([web.get('/{dbname}/{key}', handler.handle_get_request),
+                    web.post('/{dbname}/{key}', handler.handle_post_request),
+                    web.delete('/{dbname}/{key}',
+                               handler.handle_delete_request),
+                    web.patch('/', handler.handle_patch_request)])
+    web.run_app(app, host=hostname, port=port)
 
 
 def main():
@@ -88,7 +95,7 @@ def main():
             if args_dict['database']:
                 config.databases = {'dbname': 'db/path'}
             else:
-                config.hash_ring_path = "hash_ring.pkl"
+                config.hash_ring_path = "hashring.pkl"
             config.hostname = 'localhost'
             config.port = 2020
             config.unload(args_dict['get_config'])

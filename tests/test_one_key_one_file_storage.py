@@ -1,5 +1,5 @@
 from pathlib import Path
-from kvstorage.one_key_one_file_storage import OneKeyOneFileStorage
+from database.one_key_one_file_storage import OneKeyOneFileStorage
 
 
 def create_one_key_one_file_storage_in_current_directory():

@@ -1,7 +1,7 @@
 from pathlib import Path
 from gzip import compress, decompress
 
-from kvstorage.key_value_storage import KVStorage
+from database.key_value_storage import KVStorage
 
 
 class OneKeyOneFileStorage(KVStorage):
