@@ -2,7 +2,7 @@ import aiohttp
 import requests
 from aiohttp import web
 
-from consistent_hashing.hash_ring import HashRing
+from consistent_hashing.hash_ring import HashRing, hash_to_32bit_int
 from kvstorage.one_key_one_file_storage import KVStorage
 from storage_server.request_handler import RequestHandler
 
@@ -23,7 +23,6 @@ class DatabaseRequestHandler(RequestHandler):
     async def handle_post_request(self, request: aiohttp.request):
         dbname = request.match_info.get('dbname')
         key = request.match_info.get('key')
-        print(key, list(self.databases['panama'].traverse_keys()))
         if key and dbname in self.databases:
             self.databases[dbname].insert(key, await request.text())
             return web.Response(status=200)
@@ -70,10 +69,8 @@ class DatabaseRequestHandler(RequestHandler):
                             key_in_zone = True
                             break
                     if not key_in_zone:
-                        print('ti suka?')
                         continue
                     for hostname in migration:
-                        print(hostname, 'suka')
                         if hostname != request.host:
                             for tuple_range in migration[hostname]:
                                 start = tuple_range[0]
@@ -81,19 +78,14 @@ class DatabaseRequestHandler(RequestHandler):
                                 if start <= key_hash < end:
                                     value = database.get(key)
                                     url = f'http://{hostname}/{dbname}/{key}'
-                                    print(key, 'goes to', hostname)
                                     try:
                                         requests.post(url, data=value.encode(
                                             'utf-8'))
                                     except:
                                         pass
-                                else:
-                                    print('nu i huinya')
-                        else:
-                            print(hostname)
             for dbname, database in self.databases.items():
                 for key in database.traverse_keys():
-                    key_hash = HashRing.hash_to_32bit_int(
+                    key_hash = hash_to_32bit_int(
                         key.encode('utf-8'))
                     key_in_zone = False
                     for tuple_range in zones:
@@ -116,7 +108,7 @@ class DatabaseRequestHandler(RequestHandler):
             ranges = message['ranges']
             for dbname, database in self.databases.items():
                 for key in database.traverse_keys():
-                    key_hash = HashRing.hash_to_32bit_int(key.encode('utf-8'))
+                    key_hash = hash_to_32bit_int(key.encode('utf-8'))
                     for tuple_range in ranges:
                         start = tuple_range[0]
                         end = tuple_range[1]
@@ -124,7 +116,6 @@ class DatabaseRequestHandler(RequestHandler):
                             for node in nodes:
                                 value = database.get(key)
                                 url = f'http://{node}/{dbname}/{key}'
-                                print(key, 'goes to', node)
                                 try:
                                     requests.post(url,
                                                   data=value.encode('utf-8'))

@@ -57,23 +57,12 @@ def main():
             old_ring = pickle.load(inp)
         with open(args_dict['u'][1], 'rb') as inp:
             new_ring = pickle.load(inp)
-        migrations = \
-            HashRing.get_keys_migrations_for_new_nodes_from_old_nodes(old_ring,
-                                                                      new_ring)
-        print(old_ring.keys)
         old_nodes = list(old_ring.nodes.keys())
         new_nodes = list(new_ring.nodes.keys())
         old_hosts_ranges = old_ring.get_nodes_ranges()
         old_hosts_replicas = old_ring.nodes_replicas
         new_hosts_ranges = new_ring.get_nodes_ranges()
         new_hosts_replicas = new_ring.nodes_replicas
-        diff_nodes = set()
-        for node in new_nodes:
-            if node not in old_nodes or old_ring.nodes[node] != new_ring.nodes[node]:
-                diff_nodes.add(node)
-        new_diff_nodes_ranges = {}
-        for node in diff_nodes:
-            new_diff_nodes_ranges[node] = new_hosts_ranges[node]
         for host in old_nodes:
             host_ranges = old_hosts_ranges[host]
             host_replicas = old_hosts_replicas[host]
@@ -82,7 +71,6 @@ def main():
                        'ranges': host_ranges}
             requests.patch(f'http://{host}/', json.dumps(message))
         for host in old_nodes:
-            print(host, old_hosts_ranges[host], new_hosts_ranges)
             message = {'method': 'migrate_ranges_to_nodes',
                        'zones': old_hosts_ranges[host],
                        'migration': new_hosts_ranges}
@@ -90,7 +78,6 @@ def main():
         for host in new_nodes:
             host_ranges = new_hosts_ranges[host]
             host_replicas = new_hosts_replicas[host]
-            print(host, host_replicas)
             message = {'method': 'add_ranges_to_nodes',
                        'nodes': host_replicas,
                        'ranges': host_ranges}
