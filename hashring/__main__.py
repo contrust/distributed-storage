@@ -40,7 +40,7 @@ def main():
         with open(args_dict['get'], 'rb') as inp:
             ring = pickle.load(inp)
     else:
-        ring = HashRing([], 100, 1)
+        ring = HashRing([], 100, 0)
     if args_dict['add']:
         try:
             ring.add_node(args_dict['add'])

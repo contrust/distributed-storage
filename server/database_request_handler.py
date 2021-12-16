@@ -39,88 +39,33 @@ class DatabaseRequestHandler(RequestHandler):
     async def handle_patch_request(self, request: aiohttp.request):
         message = await request.json()
         method = message['method']
-        if method == 'delete_ranges_from_nodes':
-            nodes = message['nodes']
+        if method == 'delete_ranges':
             ranges = message['ranges']
             for dbname, database in self.databases.items():
                 for key in database.traverse_keys():
                     key_hash = hash_to_32bit_int(key.encode('utf-8'))
                     for tuple_range in ranges:
-                        start = tuple_range[0]
-                        end = tuple_range[1]
+                        start = int(tuple_range[0])
+                        end = int(tuple_range[1])
                         if start <= key_hash < end:
-                            for node in nodes:
-                                url = f'http://{node}/{dbname}/{key}'
-                                try:
-                                    requests.delete(url)
-                                except:
-                                    pass
-        elif method == 'migrate_ranges_to_nodes':
-            migration = message['migration']
-            zones = message['zones']
-            for dbname, database in self.databases.items():
-                for key in database.traverse_keys():
-                    key_hash = hash_to_32bit_int(key.encode('utf-8'))
-                    key_in_zone = False
-                    for tuple_range in zones:
-                        start = tuple_range[0]
-                        end = tuple_range[1]
-                        if start <= key_hash < end:
-                            key_in_zone = True
-                            break
-                    if not key_in_zone:
-                        continue
-                    for hostname in migration:
-                        if hostname != request.host:
-                            for tuple_range in migration[hostname]:
-                                start = tuple_range[0]
-                                end = tuple_range[1]
-                                if start <= key_hash < end:
-                                    value = database.get(key)
-                                    url = f'http://{hostname}/{dbname}/{key}'
-                                    try:
-                                        requests.post(url, data=value.encode(
-                                            'utf-8'))
-                                    except:
-                                        pass
-            for dbname, database in self.databases.items():
-                for key in database.traverse_keys():
-                    key_hash = hash_to_32bit_int(
-                        key.encode('utf-8'))
-                    key_in_zone = False
-                    for tuple_range in zones:
-                        start = tuple_range[0]
-                        end = tuple_range[1]
-                        if start <= key_hash < end:
-                            key_in_zone = True
-                            break
-                    if not key_in_zone:
-                        continue
-                    for hostname in migration:
-                        if hostname != request.host:
-                            for tuple_range in migration[hostname]:
-                                start = tuple_range[0]
-                                end = tuple_range[1]
-                                if start <= key_hash < end:
-                                    database.delete(key)
-        elif method == 'add_ranges_to_nodes':
-            nodes = message['nodes']
+                            database.delete(key)
+        elif method == 'add_ranges_to_host':
+            host = message['host']
             ranges = message['ranges']
             for dbname, database in self.databases.items():
                 for key in database.traverse_keys():
                     key_hash = hash_to_32bit_int(key.encode('utf-8'))
                     for tuple_range in ranges:
-                        start = tuple_range[0]
-                        end = tuple_range[1]
+                        start = int(tuple_range[0])
+                        end = int(tuple_range[1])
                         if start <= key_hash < end:
-                            for node in nodes:
-                                value = database.get(key)
-                                url = f'http://{node}/{dbname}/{key}'
-                                try:
-                                    requests.post(url,
-                                                  data=value.encode('utf-8'))
-                                except:
-                                    pass
+                            value = database.get(key)
+                            url = f'http://{host}/{dbname}/{key}'
+                            try:
+                                requests.post(url,
+                                              data=value.encode('utf-8'))
+                            except:
+                                pass
         else:
             web.Response(status=405)
         return web.Response(status=200)

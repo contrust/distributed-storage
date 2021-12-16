@@ -21,28 +21,24 @@ def parse_arguments():
         prog=None if not globals().get('__spec__')
         else f'python3 -m {__spec__.name.partition(".")[0]}'
     )
-    parser.add_argument('-u',
-                        nargs=2,
-                        metavar=(
-                            'OLD_HASH_RING_FILE', 'NEW_HASH_RING_FILE')),
     server_type = parser.add_mutually_exclusive_group(
         required=('-u' not in argv))
     server_type.add_argument('-db', '--database',
-                             action='store_true',
-                             help='define database server.')
+                             action='store_true')
     server_type.add_argument('-rt', '--router',
-                             action='store_true',
-                             help='define router server.')
+                             action='store_true')
     actions = parser.add_mutually_exclusive_group(
         required=('-db' in argv or '-rt' in argv))
     actions.add_argument('-r', '--run',
-                         metavar='CONFIG_FILE',
-                         required=False,
-                         help='run server with given config.')
+                         metavar='input_file',
+                         help='run server with config')
     actions.add_argument('-g', '--get-config',
-                         metavar='OUTPUT_FILE',
-                         required=False,
-                         help='get config file in given path.')
+                         metavar='output_file',
+                         help='get config file')
+    actions.add_argument('-u', '--update',
+                         metavar=tuple(['host', 'hash_ring_file']),
+                         nargs=2,
+                         help='update router\'s hash ring')
     return parser.parse_args()
 
 
@@ -59,36 +55,12 @@ def run_server(handler: RequestHandler, hostname: str, port: int):
 def main():
     args_dict = vars(parse_arguments())
     config = DatabaseConfig() if args_dict['database'] else RouterConfig()
-    if args_dict['u']:
-        with open(args_dict['u'][0], 'rb') as inp:
-            old_ring = pickle.load(inp)
-        with open(args_dict['u'][1], 'rb') as inp:
+    if args_dict['update']:
+        host = args_dict['update'][0]
+        with open(args_dict['update'][1], 'rb') as inp:
             new_ring = pickle.load(inp)
-        old_nodes = list(old_ring.nodes.keys())
-        new_nodes = list(new_ring.nodes.keys())
-        old_hosts_ranges = old_ring.get_nodes_ranges()
-        old_hosts_replicas = old_ring.nodes_replicas
-        new_hosts_ranges = new_ring.get_nodes_ranges()
-        new_hosts_replicas = new_ring.nodes_replicas
-        for host in old_nodes:
-            host_ranges = old_hosts_ranges[host]
-            host_replicas = old_hosts_replicas[host]
-            message = {'method': 'delete_ranges_from_nodes',
-                       'nodes': host_replicas,
-                       'ranges': host_ranges}
-            requests.patch(f'http://{host}/', json.dumps(message))
-        for host in old_nodes:
-            message = {'method': 'migrate_ranges_to_nodes',
-                       'zones': old_hosts_ranges[host],
-                       'migration': new_hosts_ranges}
-            requests.patch(f'http://{host}/', json.dumps(message))
-        for host in new_nodes:
-            host_ranges = new_hosts_ranges[host]
-            host_replicas = new_hosts_replicas[host]
-            message = {'method': 'add_ranges_to_nodes',
-                       'nodes': host_replicas,
-                       'ranges': host_ranges}
-            requests.patch(f'http://{host}/', json.dumps(message))
+        message = new_ring.__dict__
+        requests.patch(f'http://{host}/', json.dumps(message))
         sys.exit()
     if args_dict['get_config']:
         try:
@@ -110,7 +82,12 @@ def main():
         with open(config.hash_ring_path, 'rb') as inp:
             ring = pickle.load(inp)
         handler = RouterRequestHandler(ring)
-    run_server(handler=handler, hostname=config.hostname, port=config.port)
+    try:
+        run_server(handler=handler, hostname=config.hostname, port=config.port)
+    finally:
+        if args_dict['router']:
+            with open(config.hash_ring_path, 'wb') as out:
+                pickle.dump(handler.hash_ring, out, pickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':

@@ -7,15 +7,16 @@ def hash_to_32bit_int(data: bytes):
 
 
 class HashRing:
-    def __init__(self, nodes: iter,
+    def __init__(self, nodes: iter = None,
                  keys_for_node_count: int = 100, replicas_number: int = 1):
         self.keys_for_node_count = keys_for_node_count
         self.replicas_number = replicas_number
         self.nodes_replicas = {}
         self.keys = {}
         self.nodes = {}
-        for node in nodes:
-            self.add_node(node)
+        if nodes:
+            for node in nodes:
+                self.add_node(node)
 
     def get_nodes_ranges(self):
         nodes_ranges = {}
