@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from threading import Lock
 
 from database.key_value_storage import KVStorage
 from hashring.hashring import hash_to_32bit_int
@@ -38,6 +39,7 @@ def is_dir_empty(directory: Path):
 class FourPartsHashStorage(KVStorage):
     def __init__(self, directory: Path):
         self.directory = directory
+        self.write_lock = Lock()
 
     def get(self, key):
         key_path = get_key_path(self.directory, key)
@@ -53,45 +55,47 @@ class FourPartsHashStorage(KVStorage):
         return None
 
     def insert(self, key, value):
-        hash_parts = get_hex_hash_parts_from_key(key)
-        key_path = self.directory
-        for i in range(3):
-            if not (key_path / hash_parts[i]).exists():
-                (key_path / hash_parts[i]).mkdir()
-            key_path = (key_path / hash_parts[i])
-        key_path = get_key_path(self.directory, key)
-        if key_path.exists() and key_path.is_file():
-            try:
-                with open(key_path) as json_file:
-                    values = json.load(json_file)
-            except (json.JSONDecodeError, FileNotFoundError):
+        with self.write_lock:
+            hash_parts = get_hex_hash_parts_from_key(key)
+            key_path = self.directory
+            for i in range(3):
+                if not (key_path / hash_parts[i]).exists():
+                    (key_path / hash_parts[i]).mkdir()
+                key_path = (key_path / hash_parts[i])
+            key_path = get_key_path(self.directory, key)
+            if key_path.exists() and key_path.is_file():
+                try:
+                    with open(key_path) as json_file:
+                        values = json.load(json_file)
+                except (json.JSONDecodeError, FileNotFoundError):
+                    values = {}
+            else:
                 values = {}
-        else:
-            values = {}
-        values[key] = value
-        with open(key_path, mode='w') as file:
-            json.dump(values, file, indent=4)
+            values[key] = value
+            with open(key_path, mode='w') as file:
+                json.dump(values, file, indent=4)
 
     def delete(self, key):
-        key_path = get_key_path(self.directory, key)
-        if key_path.exists() and key_path.is_file():
-            try:
-                with open(key_path) as json_file:
-                    values = json.load(json_file)
-            except (json.JSONDecodeError, FileNotFoundError):
+        with self.write_lock:
+            key_path = get_key_path(self.directory, key)
+            if key_path.exists() and key_path.is_file():
+                try:
+                    with open(key_path) as json_file:
+                        values = json.load(json_file)
+                except (json.JSONDecodeError, FileNotFoundError):
+                    values = {}
+            else:
                 values = {}
-        else:
-            values = {}
-        if key in values:
-            del values[key]
-        with open(key_path, mode='w') as file:
-            json.dump(values, file, indent=4)
-        if not values:
-            key_path.unlink()
-            for _ in range(3):
-                if is_dir_empty(key_path.parent):
-                    key_path.parent.rmdir()
-                key_path = key_path.parent
+            if key in values:
+                del values[key]
+            with open(key_path, mode='w') as file:
+                json.dump(values, file, indent=4)
+            if not values:
+                key_path.unlink()
+                for _ in range(3):
+                    if is_dir_empty(key_path.parent):
+                        key_path.parent.rmdir()
+                    key_path = key_path.parent
 
     def traverse_keys(self):
         for path in self.directory.glob('*/*/*/*'):
