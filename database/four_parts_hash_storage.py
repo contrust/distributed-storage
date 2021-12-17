@@ -40,62 +40,66 @@ class FourPartsHashStorage(KVStorage):
         self.directory = directory
 
     def get(self, key):
-        try:
-            key_path = get_key_path(self.directory, key)
-            if key_path.exists() and key_path.is_file():
+        key_path = get_key_path(self.directory, key)
+        if key_path.exists() and key_path.is_file():
+            try:
                 with open(key_path) as json_file:
                     values = json.load(json_file)
                     if key in values:
                         return values[key]
-        except FileNotFoundError:
-            return None
+            except (json.JSONDecodeError, FileNotFoundError):
+                return None
+
         return None
 
     def insert(self, key, value):
-        try:
-            hash_parts = get_hex_hash_parts_from_key(key)
-            key_path = self.directory
-            for i in range(3):
-                if not (key_path / hash_parts[i]).exists():
-                    (key_path / hash_parts[i]).mkdir()
-                key_path = (key_path / hash_parts[i])
-            key_path = get_key_path(self.directory, key)
-            if key_path.exists() and key_path.is_file():
+        hash_parts = get_hex_hash_parts_from_key(key)
+        key_path = self.directory
+        for i in range(3):
+            if not (key_path / hash_parts[i]).exists():
+                (key_path / hash_parts[i]).mkdir()
+            key_path = (key_path / hash_parts[i])
+        key_path = get_key_path(self.directory, key)
+        if key_path.exists() and key_path.is_file():
+            try:
                 with open(key_path) as json_file:
                     values = json.load(json_file)
-            else:
+            except (json.JSONDecodeError, FileNotFoundError):
                 values = {}
-            values[key] = value
-            with open(key_path, mode='w') as file:
-                json.dump(values, file, indent=4)
-        except FileNotFoundError:
-            pass
+        else:
+            values = {}
+        values[key] = value
+        with open(key_path, mode='w') as file:
+            json.dump(values, file, indent=4)
 
     def delete(self, key):
-        try:
-            key_path = get_key_path(self.directory, key)
-            if key_path.exists() and key_path.is_file():
+        key_path = get_key_path(self.directory, key)
+        if key_path.exists() and key_path.is_file():
+            try:
                 with open(key_path) as json_file:
                     values = json.load(json_file)
-            else:
+            except (json.JSONDecodeError, FileNotFoundError):
                 values = {}
-            if key in values:
-                del values[key]
-            with open(key_path, mode='w') as file:
-                json.dump(values, file, indent=4)
-            if not values:
-                key_path.unlink()
-                for _ in range(3):
-                    if is_dir_empty(key_path.parent):
-                        key_path.parent.rmdir()
-                    key_path = key_path.parent
-        except FileNotFoundError:
-            pass
+        else:
+            values = {}
+        if key in values:
+            del values[key]
+        with open(key_path, mode='w') as file:
+            json.dump(values, file, indent=4)
+        if not values:
+            key_path.unlink()
+            for _ in range(3):
+                if is_dir_empty(key_path.parent):
+                    key_path.parent.rmdir()
+                key_path = key_path.parent
 
     def traverse_keys(self):
         for path in self.directory.glob('*/*/*/*'):
             if path.is_file():
-                with open(path) as json_file:
-                    values = json.load(json_file)
-                    for value in values:
-                        yield value
+                try:
+                    with open(path) as json_file:
+                        values = json.load(json_file)
+                        for value in values:
+                            yield value
+                except (json.JSONDecodeError, FileNotFoundError):
+                    continue
