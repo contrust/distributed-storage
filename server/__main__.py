@@ -8,7 +8,7 @@ from sys import argv
 import requests
 from aiohttp import web
 
-from database.one_key_one_file_storage import OneKeyOneFileStorage
+from database.four_parts_hash_storage import FourPartsHashStorage
 from hashring.__main__ import load_ring, unload_ring
 from server.database_config import DatabaseConfig
 from server.database_request_handler import DatabaseRequestHandler
@@ -76,7 +76,7 @@ def main():
             sys.exit()
     config.load(args_dict['run'])
     if args_dict['database']:
-        databases = {name: OneKeyOneFileStorage(Path(directory))
+        databases = {name: FourPartsHashStorage(Path(directory))
                      for name, directory in config.databases.items()}
         handler = DatabaseRequestHandler(databases)
     else:

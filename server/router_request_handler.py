@@ -11,7 +11,7 @@ from server.request_handler import RequestHandler
 class RouterRequestHandler(RequestHandler):
     def __init__(self, hash_ring: HashRing):
         self.hash_ring = hash_ring
-        self.nodes = list(hash_ring.nodes.keys())
+        self.nodes = hash_ring.nodes
 
     async def handle_get_request(self, request: aiohttp.request):
         dbname = request.match_info.get('dbname')
@@ -34,7 +34,6 @@ class RouterRequestHandler(RequestHandler):
         dbname = request.match_info.get('dbname')
         key = request.match_info.get('key')
         node = self.hash_ring.find_node_for_string(key)
-        next_node = self.nodes[(self.nodes.index(node) + 1) % len(self.nodes)]
         responses = []
         async with aiohttp.ClientSession() as session:
             async with session.post(f'http://{node}/{dbname}/{key}',
