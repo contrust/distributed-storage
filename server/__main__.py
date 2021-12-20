@@ -76,8 +76,12 @@ def main():
             sys.exit()
     config.load(args_dict['run'])
     if args_dict['database']:
-        databases = {name: FourPartsHashStorage(Path(directory))
-                     for name, directory in config.databases.items()}
+        try:
+            databases = {name: FourPartsHashStorage(Path(directory))
+                         for name, directory in config.databases.items()}
+        except ValueError as e:
+            print(e)
+            sys.exit()
         handler = DatabaseRequestHandler(databases)
     else:
         with open(config.hash_ring_path, 'rb') as inp:

@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 from threading import Lock
 
@@ -36,23 +37,32 @@ def is_dir_empty(directory: Path):
     return not any(Path(directory).iterdir())
 
 
+def get_values_by_key_path(key_path: Path):
+    if key_path.exists() and key_path.is_file():
+        try:
+            with open(key_path) as json_file:
+                return json.load(json_file)
+        except (json.JSONDecodeError, FileNotFoundError):
+            return {}
+    else:
+        return {}
+
+
 class FourPartsHashStorage(KVStorage):
     def __init__(self, directory: Path):
-        self.directory = directory
+        if directory.exists():
+            self.directory = directory
+        else:
+            raise ValueError(f'There\'s no path {directory}.')
         self.write_lock = Lock()
 
     def get(self, key):
         key_path = get_key_path(self.directory, key)
-        if key_path.exists() and key_path.is_file():
-            try:
-                with open(key_path) as json_file:
-                    values = json.load(json_file)
-                    if key in values:
-                        return values[key]
-            except (json.JSONDecodeError, FileNotFoundError):
-                return None
-
-        return None
+        values = get_values_by_key_path(key_path)
+        if key in values:
+            return values[key]
+        else:
+            return None
 
     def insert(self, key, value):
         with self.write_lock:
@@ -63,33 +73,25 @@ class FourPartsHashStorage(KVStorage):
                     (key_path / hash_parts[i]).mkdir()
                 key_path = (key_path / hash_parts[i])
             key_path = get_key_path(self.directory, key)
-            if key_path.exists() and key_path.is_file():
-                try:
-                    with open(key_path) as json_file:
-                        values = json.load(json_file)
-                except (json.JSONDecodeError, FileNotFoundError):
-                    values = {}
-            else:
-                values = {}
+            values = get_values_by_key_path(key_path)
             values[key] = value
-            with open(key_path, mode='w') as file:
-                json.dump(values, file, indent=4)
+            try:
+                with open(key_path, mode='w') as file:
+                    json.dump(values, file, indent=4)
+            except FileNotFoundError:
+                sys.exit()
 
     def delete(self, key):
         with self.write_lock:
             key_path = get_key_path(self.directory, key)
-            if key_path.exists() and key_path.is_file():
-                try:
-                    with open(key_path) as json_file:
-                        values = json.load(json_file)
-                except (json.JSONDecodeError, FileNotFoundError):
-                    values = {}
-            else:
-                values = {}
+            values = get_values_by_key_path(key_path)
             if key in values:
                 del values[key]
-            with open(key_path, mode='w') as file:
-                json.dump(values, file, indent=4)
+            try:
+                with open(key_path, mode='w') as file:
+                    json.dump(values, file, indent=4)
+            except FileNotFoundError:
+                sys.exit()
             if not values:
                 key_path.unlink()
                 for _ in range(3):
@@ -99,11 +101,6 @@ class FourPartsHashStorage(KVStorage):
 
     def traverse_keys(self):
         for path in self.directory.glob('*/*/*/*'):
-            if path.is_file():
-                try:
-                    with open(path) as json_file:
-                        values = json.load(json_file)
-                        for value in values:
-                            yield value
-                except (json.JSONDecodeError, FileNotFoundError):
-                    continue
+            values = get_values_by_key_path(path)
+            for value in values:
+                yield value
