@@ -2,8 +2,8 @@ import aiohttp
 import requests
 from aiohttp import web
 
-from hashring.hashring import HashRing, hash_to_32bit_int
-from database.one_key_one_file_storage import KVStorage
+from hashring.hashring import hash_to_32bit_int
+from database.key_value_storage import KVStorage
 from server.request_handler import RequestHandler
 
 
