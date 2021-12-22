@@ -47,10 +47,18 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
-    - name: Check coverage
-      # Здесь --cov=minesweeper выбирает директорию, для которой считать покрытие тестами
+    - name: Check database coverage
       run: |
         pytest --cov=database
+    - name: Check server coverage
+      run: |
+        pytest --cov=server
+    - name: Check client coverage
+      run: |
+        pytest --cov=client
+    - name: Check hashring coverage
+      run: |
+        pytest --cov=hashring
       # Дополнительно можно запустить pytest --cov=minesweeper --cov-report html:cov_html
       # И научиться загружать отчёт из папки cov_html в артифакты workflow
       # В этом поможет пример из документации:
