@@ -5,7 +5,7 @@ import shutil
 import pytest
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(autouse=True, scope="function")
 def chdir_to_temp_directory():
     temp_directory = pathlib.Path('./temp')
     tests_directory = os.path.dirname(os.path.abspath(__file__))

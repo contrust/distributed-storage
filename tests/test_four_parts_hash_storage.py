@@ -12,7 +12,12 @@ def create_four_parts_hash_storage_in_current_directory():
     return storage
 
 
-def test_create_file_if_key_has_not_been_in_storage(chdir_to_temp_directory):
+def test_raise_value_error_is_database_directory_does_not_exist():
+    with pytest.raises(ValueError):
+        FourPartsHashStorage(Path('milkyway'))
+
+
+def test_create_file_if_key_has_not_been_in_storage():
     storage = create_four_parts_hash_storage_in_current_directory()
     key = 'koala'
     key_path = get_key_path(Path('.'), key)
@@ -21,7 +26,7 @@ def test_create_file_if_key_has_not_been_in_storage(chdir_to_temp_directory):
     assert key_path.exists()
 
 
-def test_created_file_has_the_same_value(chdir_to_temp_directory):
+def test_created_file_has_the_same_value():
     storage = create_four_parts_hash_storage_in_current_directory()
     key = 'koala'
     value = 'apple'
@@ -32,8 +37,7 @@ def test_created_file_has_the_same_value(chdir_to_temp_directory):
     assert values[key] == value
 
 
-def test_file_not_exists_if_delete_key_with_unique_hash(
-        chdir_to_temp_directory):
+def test_file_not_exists_if_delete_key_with_unique_hash():
     storage = create_four_parts_hash_storage_in_current_directory()
     key = 'koala'
     key_path = get_key_path(Path('.'), key)
@@ -45,8 +49,7 @@ def test_file_not_exists_if_delete_key_with_unique_hash(
 
 @patch('database.four_parts_hash_storage.get_hex_hash_parts_from_key',
        lambda x: ['1'] * 4)
-def test_file_exists_if_delete_key_with_not_unique_hash(
-        chdir_to_temp_directory):
+def test_file_exists_if_delete_key_with_not_unique_hash():
     storage = create_four_parts_hash_storage_in_current_directory()
     key1 = 'koala'
     key2 = 'cherry'
@@ -57,7 +60,7 @@ def test_file_exists_if_delete_key_with_not_unique_hash(
     assert key_path.exists()
 
 
-def test_get_the_same_inserted_value(chdir_to_temp_directory):
+def test_get_the_same_inserted_value():
     storage = create_four_parts_hash_storage_in_current_directory()
     key = 'mandarin'
     inserted_value = 'happy new year'
@@ -66,7 +69,7 @@ def test_get_the_same_inserted_value(chdir_to_temp_directory):
     assert inserted_value == value
 
 
-def test_traverse_all_inserted_keys_with_unique_hash(chdir_to_temp_directory):
+def test_traverse_all_inserted_keys_with_unique_hash():
     storage = create_four_parts_hash_storage_in_current_directory()
     keys = {str(i) for i in range(10)}
     value = 'happy new year'
@@ -78,14 +81,11 @@ def test_traverse_all_inserted_keys_with_unique_hash(chdir_to_temp_directory):
 
 @patch('database.four_parts_hash_storage.get_hex_hash_parts_from_key',
        lambda x: ['1'] * 4)
-def test_traverse_all_inserted_keys_with_not_unique_hash(
-        chdir_to_temp_directory):
-    test_traverse_all_inserted_keys_with_unique_hash(
-        test_traverse_all_inserted_keys_with_unique_hash(
-            chdir_to_temp_directory))
+def test_traverse_all_inserted_keys_with_not_unique_hash():
+    test_traverse_all_inserted_keys_with_unique_hash()
 
 
-def test_return_none_if_get_not_inserted_key(chdir_to_temp_directory):
+def test_return_none_if_get_not_inserted_key():
     storage = create_four_parts_hash_storage_in_current_directory()
     value = storage.get('hello')
     assert value is None
