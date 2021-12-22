@@ -79,7 +79,7 @@ class FourPartsHashStorage(KVStorage):
                 with open(key_path, mode='w') as file:
                     json.dump(values, file, indent=4)
             except FileNotFoundError:
-                sys.exit()
+                return
 
     def delete(self, key):
         with self.write_lock:
@@ -91,7 +91,7 @@ class FourPartsHashStorage(KVStorage):
                 with open(key_path, mode='w') as file:
                     json.dump(values, file, indent=4)
             except FileNotFoundError:
-                sys.exit()
+                return
             if not values:
                 key_path.unlink()
                 for _ in range(3):

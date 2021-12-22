@@ -1,4 +1,8 @@
 from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
 from database.four_parts_hash_storage import FourPartsHashStorage, get_key_path, \
     get_values_by_key_path
 
@@ -28,7 +32,7 @@ def test_created_file_has_the_same_value(chdir_to_temp_directory):
     assert values[key] == value
 
 
-def test_file_not_exist_if_delete_key_in_file_with_one_key(
+def test_file_not_exists_if_delete_key_with_unique_hash(
         chdir_to_temp_directory):
     storage = create_four_parts_hash_storage_in_current_directory()
     key = 'koala'
@@ -39,6 +43,20 @@ def test_file_not_exist_if_delete_key_in_file_with_one_key(
     assert not key_path.exists()
 
 
+@patch('database.four_parts_hash_storage.get_hex_hash_parts_from_key',
+       lambda x: ['1'] * 4)
+def test_file_exists_if_delete_key_with_not_unique_hash(
+        chdir_to_temp_directory):
+    storage = create_four_parts_hash_storage_in_current_directory()
+    key1 = 'koala'
+    key2 = 'cherry'
+    key_path = get_key_path(Path('.'), key1)
+    storage.insert(key1, 'banana')
+    storage.insert(key2, 'banana')
+    storage.delete(key1)
+    assert key_path.exists()
+
+
 def test_get_the_same_inserted_value(chdir_to_temp_directory):
     storage = create_four_parts_hash_storage_in_current_directory()
     key = 'mandarin'
@@ -46,3 +64,36 @@ def test_get_the_same_inserted_value(chdir_to_temp_directory):
     storage.insert(key, inserted_value)
     value = storage.get(key)
     assert inserted_value == value
+
+
+def test_traverse_all_inserted_keys_with_unique_hash(chdir_to_temp_directory):
+    storage = create_four_parts_hash_storage_in_current_directory()
+    keys = {str(i) for i in range(10)}
+    value = 'happy new year'
+    for key in keys:
+        storage.insert(key, value)
+    traversed_keys = set(storage.traverse_keys())
+    assert traversed_keys == keys
+
+
+@patch('database.four_parts_hash_storage.get_hex_hash_parts_from_key',
+       lambda x: ['1'] * 4)
+def test_traverse_all_inserted_keys_with_not_unique_hash(
+        chdir_to_temp_directory):
+    test_traverse_all_inserted_keys_with_unique_hash(
+        test_traverse_all_inserted_keys_with_unique_hash(
+            chdir_to_temp_directory))
+
+
+def test_return_none_if_get_not_inserted_key(chdir_to_temp_directory):
+    storage = create_four_parts_hash_storage_in_current_directory()
+    value = storage.get('hello')
+    assert value is None
+
+
+def test_do_nothing_if_delete_not_inserted_key(chdir_to_temp_directory):
+    storage = create_four_parts_hash_storage_in_current_directory()
+    try:
+        storage.delete('hello')
+    except:
+        pytest.fail()
