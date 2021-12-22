@@ -38,34 +38,49 @@ class DatabaseRequestHandler(RequestHandler):
 
     async def handle_patch_request(self, request: aiohttp.request):
         message = await request.json()
-        method = message['method']
+        try:
+            method = message['method']
+        except KeyError:
+            return web.Response(status=400)
         if method == 'delete_ranges':
-            ranges = message['ranges']
-            for dbname, database in self.databases.items():
-                for key in database.traverse_keys():
-                    key_hash = hash_to_32bit_int(key.encode('utf-8'))
-                    for tuple_range in ranges:
-                        start = int(tuple_range[0])
-                        end = int(tuple_range[1])
-                        if start <= key_hash < end:
-                            database.delete(key)
+            try:
+                ranges = message['ranges']
+            except KeyError:
+                return web.Response(status=400)
+            self._delete_ranges(ranges)
         elif method == 'add_ranges_to_host':
-            host = message['host']
-            ranges = message['ranges']
-            for dbname, database in self.databases.items():
-                for key in database.traverse_keys():
-                    key_hash = hash_to_32bit_int(key.encode('utf-8'))
-                    for tuple_range in ranges:
-                        start = int(tuple_range[0])
-                        end = int(tuple_range[1])
-                        if start <= key_hash < end:
-                            value = database.get(key)
-                            url = f'http://{host}/{dbname}/{key}'
-                            try:
-                                requests.post(url,
-                                              data=value.encode('utf-8'))
-                            except:
-                                pass
+            try:
+                host = message['host']
+                ranges = message['ranges']
+            except KeyError:
+                return web.Response(status=400)
+            self._add_ranges_to_host(host, ranges)
         else:
             web.Response(status=405)
         return web.Response(status=200)
+
+    def _add_ranges_to_host(self, host: str, ranges: list):
+        for dbname, database in self.databases.items():
+            for key in database.traverse_keys():
+                key_hash = hash_to_32bit_int(key.encode('utf-8'))
+                for tuple_range in ranges:
+                    start = int(tuple_range[0])
+                    end = int(tuple_range[1])
+                    if start <= key_hash < end:
+                        value = database.get(key)
+                        url = f'http://{host}/{dbname}/{key}'
+                        try:
+                            requests.post(url,
+                                          data=value.encode('utf-8'))
+                        except:
+                            pass
+
+    def _delete_ranges(self, ranges: list):
+        for dbname, database in self.databases.items():
+            for key in database.traverse_keys():
+                key_hash = hash_to_32bit_int(key.encode('utf-8'))
+                for tuple_range in ranges:
+                    start = int(tuple_range[0])
+                    end = int(tuple_range[1])
+                    if start <= key_hash < end:
+                        database.delete(key)
