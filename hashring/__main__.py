@@ -82,7 +82,7 @@ def main():
         ring = HashRing([], number_of_keys_for_node,
                         number_of_replicas_for_node)
         unload_ring(ring, output_file)
-        print(f'Successfully created ring')
+        print('Successfully created ring')
     elif args_dict['info']:
         input_file = args_dict['info']
         ring = load_ring(input_file)

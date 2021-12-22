@@ -93,7 +93,5 @@ def test_return_none_if_get_not_inserted_key():
 
 def test_exception_is_not_raised_if_delete_not_inserted_key():
     storage = create_four_parts_hash_storage_in_current_directory()
-    try:
-        storage.delete('hello')
-    except:
-        pytest.fail()
+    storage.delete('hello')
+    assert True

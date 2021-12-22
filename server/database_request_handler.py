@@ -72,7 +72,7 @@ class DatabaseRequestHandler(RequestHandler):
                         try:
                             requests.post(url,
                                           data=value.encode('utf-8'))
-                        except:
+                        except requests.exceptions.BaseHTTPError:
                             pass
 
     def _delete_ranges(self, ranges: list):
