@@ -91,7 +91,7 @@ def test_return_none_if_get_not_inserted_key():
     assert value is None
 
 
-def test_do_nothing_if_delete_not_inserted_key(chdir_to_temp_directory):
+def test_exception_is_not_raised_if_delete_not_inserted_key():
     storage = create_four_parts_hash_storage_in_current_directory()
     try:
         storage.delete('hello')

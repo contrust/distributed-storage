@@ -17,7 +17,7 @@ from server.router_config import RouterConfig
 from server.router_request_handler import RouterRequestHandler
 
 
-def parse_arguments():
+def parse_arguments(args):
     parser = argparse.ArgumentParser(
         prog=None if not globals().get('__spec__')
         else f'python3 -m {__spec__.name.partition(".")[0]}'
@@ -40,7 +40,7 @@ def parse_arguments():
                              action='store_true')
     server_type.add_argument('-rt', '--router',
                              action='store_true')
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def run_server(handler: RequestHandler, hostname: str, port: int):
@@ -54,7 +54,7 @@ def run_server(handler: RequestHandler, hostname: str, port: int):
 
 
 def main():
-    args_dict = vars(parse_arguments())
+    args_dict = vars(parse_arguments(sys.argv[1:]))
     config = DatabaseConfig() if args_dict['database'] else RouterConfig()
     if args_dict['update']:
         host = args_dict['update'][0]

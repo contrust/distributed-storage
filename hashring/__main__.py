@@ -6,7 +6,7 @@ import sys
 from hashring.hashring import HashRing
 
 
-def parse_arguments():
+def parse_arguments(args):
     parser = argparse.ArgumentParser(
         prog=None if not globals().get('__spec__')
         else f'python3 -m {__spec__.name.partition(".")[0]}'
@@ -31,7 +31,7 @@ def parse_arguments():
     methods.add_argument('-i', '--info',
                          metavar="input_file",
                          help='show ring info')
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def show_ring_info(ring: HashRing):
@@ -52,7 +52,7 @@ def unload_ring(ring: HashRing, path: str):
 
 
 def main():
-    args_dict = vars(parse_arguments())
+    args_dict = vars(parse_arguments(sys.argv[1:]))
     if args_dict['add_host']:
         host = args_dict['add_host'][0]
         input_file = args_dict['add_host'][1]
