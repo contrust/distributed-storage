@@ -13,8 +13,8 @@ class HashRing:
         self.replicas_number = replicas_number
         self.nodes_replicas = {}
         self.keys = {}
-        self.nodes = list(nodes) if nodes else []
-        for node in self.nodes:
+        self.nodes = []
+        for node in nodes:
             self.add_node(node)
 
     def get_nodes_ranges(self):
@@ -46,7 +46,7 @@ class HashRing:
                 node = self.keys[max_element]
             return node
         else:
-            raise ValueError
+            return None
 
     def add_node(self, node: str):
         if node not in self.nodes:
@@ -56,8 +56,6 @@ class HashRing:
                     self.keys[number] = node
             self.nodes.append(node)
             self._update_replicas()
-        else:
-            raise ValueError
 
     def remove_node(self, node: str):
         if node in self.nodes:
@@ -66,8 +64,6 @@ class HashRing:
                     del self.keys[ring_key]
             self.nodes.remove(node)
             self._update_replicas()
-        else:
-            raise ValueError
 
     def _update_replicas(self):
         self.keys = {x: y for x, y in sorted(self.keys.items())}
