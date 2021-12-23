@@ -4,7 +4,7 @@ import aiohttp
 import requests
 from aiohttp import web, ClientConnectionError
 
-from hashring.hashring import HashRing
+from hashring.ring import HashRing
 from server.request_handler import RequestHandler
 
 

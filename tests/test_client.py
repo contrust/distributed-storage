@@ -25,12 +25,12 @@ def test_value_is_changed_on_inserted_value_after_adding():
 
 
 def test_value_is_deleted_after_removing():
-    insert_value('panama', 'queen', 'fox')
-    value = get_value('panama', 'queen')
+    insert_value('panama', 'zebra', 'fox')
+    value = get_value('panama', 'zebra')
     assert value == 'fox'
-    args = '-H localhost -P 2309 -D panama -R -K queen'.split()
+    args = '-H localhost -P 2309 -D panama -R -K zebra'.split()
     main(args)
-    new_value = get_value('panama', 'queen')
+    new_value = get_value('panama', 'zebra')
     assert new_value == ''
 
 

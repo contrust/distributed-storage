@@ -8,7 +8,7 @@ from contextlib import contextmanager
 import pytest
 
 from database.four_parts_hash_storage import FourPartsHashStorage
-from hashring.hashring import HashRing
+from hashring.ring import HashRing
 from server.__main__ import run_server
 from server.database_request_handler import DatabaseRequestHandler
 from server.router_request_handler import RouterRequestHandler
@@ -20,7 +20,8 @@ DATABASE_NAMES = ['panama', 'liana']
 
 @contextmanager
 def _chdir_to_temp_directory():
-    temp_directory = pathlib.Path(os.path.abspath(__file__)).parent / pathlib.Path(
+    temp_directory = pathlib.Path(
+        os.path.abspath(__file__)).parent / pathlib.Path(
         'temp')
     temp_directory.mkdir(exist_ok=True)
     os.chdir(temp_directory)
@@ -47,7 +48,8 @@ def run_database_server(hostname: str, port: int):
     databases = {}
     for database_name in databases_names:
         databases[database_name] = FourPartsHashStorage(
-            pathlib.Path('temp') / pathlib.Path(host) / pathlib.Path(database_name))
+            pathlib.Path('temp') / pathlib.Path(host) / pathlib.Path(
+                database_name))
     request_handler = DatabaseRequestHandler(databases)
     run_server(request_handler, hostname, port)
 

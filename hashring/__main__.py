@@ -3,7 +3,7 @@ import argparse
 import pickle
 import sys
 
-from hashring.hashring import HashRing
+from hashring.ring import HashRing
 
 
 def parse_arguments(args):

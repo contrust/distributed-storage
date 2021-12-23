@@ -3,7 +3,7 @@ from pathlib import Path
 from threading import Lock
 
 from database.key_value_storage import KVStorage
-from hashring.hashring import hash_to_32bit_int
+from hashring.ring import hash_to_32bit_int
 
 
 def get_four_parts_of_hash(key: int):
