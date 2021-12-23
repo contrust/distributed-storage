@@ -59,6 +59,9 @@ jobs:
     - name: Check hashring coverage
       run: |
         pytest --cov=hashring
+    - name: Check total coverage
+      run: |
+        echo -e "[run]\nomit = tests/*" > .coveragerc && pytest -v --cov=./
       # Дополнительно можно запустить pytest --cov=minesweeper --cov-report html:cov_html
       # И научиться загружать отчёт из папки cov_html в артифакты workflow
       # В этом поможет пример из документации:
