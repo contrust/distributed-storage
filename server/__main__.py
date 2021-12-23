@@ -99,5 +99,9 @@ def main(args):
             unload_ring(handler.hash_ring, config.hash_ring_path)
 
 
-if __name__ == '__main__':
+def entry_point():
     main(sys.argv[1:])
+
+
+if __name__ == '__main__':
+    entry_point()
