@@ -1,3 +1,5 @@
+import time
+
 from client.__main__ import main
 from tests.test_database_request_handler import get_value, insert_value
 
@@ -11,8 +13,9 @@ def test_print_inserted_value_when_get_key(capsys):
 
 
 def test_value_is_changed_on_inserted_value_after_adding():
+    insert_value('panama', 'dora', 'snake')
     value = get_value('panama', 'dora')
-    assert value == ''
+    assert value == 'snake'
     args = '-H localhost -P 2309 -D panama -A -K dora -V sandwich'.split()
     main(args)
     new_value = get_value('panama', 'dora')
