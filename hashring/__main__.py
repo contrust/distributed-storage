@@ -57,22 +57,14 @@ def main(args):
         host = args_dict['add_host'][0]
         input_file = args_dict['add_host'][1]
         ring = load_ring(input_file)
-        try:
-            ring.add_node(host)
-        except ValueError:
-            print('Can not add node because it is already in ring')
-            sys.exit()
+        ring.add_node(host)
         unload_ring(ring, input_file)
         print(f'Successfully added node {host}')
     elif args_dict['remove_host']:
         host = args_dict['remove_host'][0]
         input_file = args_dict['remove_host'][1]
         ring = load_ring(input_file)
-        try:
-            ring.remove_node(host)
-        except ValueError:
-            print('Can not remove node because it is not in ring')
-            sys.exit()
+        ring.remove_node(host)
         unload_ring(ring, input_file)
         print(f'Successfully removed node {host}')
     elif args_dict['create']:

@@ -23,6 +23,20 @@ def test_get_value_after_insert():
     assert value == 'soup'
 
 
+def test_big_value_is_the_same_after_insert():
+    value = 'a' * 1000000
+    insert_value('panama', 'a', value)
+    value2 = get_value('panama', 'a')
+    assert value == value2
+
+
+def test_big_key_is_the_same_after_insert():
+    key = 'a' * 8000
+    insert_value('panama', key, 'value')
+    value = get_value('panama', key)
+    assert value == 'value'
+
+
 def test_value_changes_after_insert_with_different_value():
     insert_value('panama', 'koala', 'soup')
     insert_value('panama', 'koala', 'soda')
