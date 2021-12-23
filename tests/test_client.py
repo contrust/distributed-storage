@@ -10,14 +10,14 @@ def test_print_inserted_value_when_get_key(capsys):
     assert capsys.readouterr().out == 'circle\n'
 
 
-# def test_value_is_changed_on_inserted_value_after_adding(capsys):
-#     value = get_value('panama', 'dora')
-#     assert value == ''
-#     capsys.readouterr()
-#     args = '-H localhost -P 2309 -D panama -A -K dora -V sandwich'.split()
-#     main(args)
-#     new_value = get_value('panama', 'dora')
-#     assert new_value == 'sandwich'
+def test_value_is_changed_on_inserted_value_after_adding(capsys):
+    value = get_value('panama', 'tomato')
+    assert value == ''
+    capsys.readouterr()
+    args = '-H localhost -P 2309 -D panama -A -K tomato -V sandwich'.split()
+    main(args)
+    new_value = get_value('panama', 'tomato')
+    assert new_value == 'sandwich'
 
 
 def test_value_is_deleted_after_removing(capsys):
