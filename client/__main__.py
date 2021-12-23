@@ -49,7 +49,8 @@ def get_value(hostname: str, port: int, database: str, key: str):
 
 def insert_value(hostname: str, port: int, database: str, key: str, value: str):
     url = get_url(hostname, port, database, key)
-    requests.post(url, data=value.encode('utf-8'))
+    data = value.encode('utf-8')
+    requests.post(url, data=data)
 
 
 def delete_value(hostname: str, port: int, database: str, key: str):

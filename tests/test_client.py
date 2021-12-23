@@ -1,4 +1,6 @@
-import time
+from unittest.mock import patch
+
+import requests.exceptions
 
 from client.__main__ import main
 from tests.test_database_request_handler import get_value, insert_value
@@ -30,3 +32,15 @@ def test_value_is_deleted_after_removing():
     main(args)
     new_value = get_value('panama', 'queen')
     assert new_value == ''
+
+
+def raise_connection_error():
+    raise requests.ConnectionError
+
+
+@patch('client.__main__.insert_value', lambda *x: raise_connection_error())
+def test_print_connection_error_if_can_not_connect_to_server(capsys):
+    args = '-H localhost -P 2309 -D panama -A -K lalaland -V flow'.split()
+    main(args)
+    assert capsys.readouterr().out == \
+           'Error: can not connect to localhost:2309.\n'
