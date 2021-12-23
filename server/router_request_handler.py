@@ -115,7 +115,10 @@ class RouterRequestHandler(RequestHandler):
 
     async def handle_patch_request(self, request: aiohttp.request):
         message = await request.json()
-        message['keys'] = {int(x): y for x, y in message['keys'].items()}
+        try:
+            message['keys'] = {int(x): y for x, y in message['keys'].items()}
+        except KeyError:
+            return web.Response(status=400)
         new_ring = HashRing()
         new_ring.__dict__.update(message)
         old_ring = self.hash_ring

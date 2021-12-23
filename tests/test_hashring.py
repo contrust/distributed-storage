@@ -1,5 +1,7 @@
+import pathlib
 from unittest.mock import patch
 
+from hashring.__main__ import main, unload_ring, load_ring
 from hashring.ring import HashRing
 
 ONE_NODE_LIST = ['localhost:2020']
@@ -84,3 +86,30 @@ def test_node_for_str_is_with_max_key_if_str_hash_less_than_all_keys():
     key = 'kaleidoscope'
     found_node = ring.find_node_for_string(key)
     assert found_node == 'localhost:2021'
+
+
+def test_file_created_after_create():
+    hashring_file_name = 'test_hashring.pkl'
+    hashring_path = pathlib.Path(hashring_file_name)
+    assert not hashring_path.exists()
+    args = f'-c 100 0 {hashring_file_name}'.split()
+    main(args)
+    assert hashring_path.exists()
+
+
+def test_created_file_contain_hashring_with_inserted_parameters():
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-c 100 7 {hashring_file_name}'.split()
+    main(args)
+    ring = load_ring(hashring_file_name)
+    assert ring.replicas_number == 7
+    assert ring.keys_for_node_count == 100
+
+
+def test_ring_in_created_file_has_no_keys_and_nodes():
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-c 100 7 {hashring_file_name}'.split()
+    main(args)
+    ring = load_ring(hashring_file_name)
+    assert len(ring.keys) == 0
+    assert len(ring.nodes) == 0

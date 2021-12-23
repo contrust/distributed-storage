@@ -10,6 +10,7 @@ from aiohttp import web
 
 from database.four_parts_hash_storage import FourPartsHashStorage
 from hashring.__main__ import load_ring, unload_ring
+from hashring.ring import HashRing
 from server.database_config import DatabaseConfig
 from server.database_request_handler import DatabaseRequestHandler
 from server.request_handler import RequestHandler
@@ -53,6 +54,11 @@ def run_server(handler: RequestHandler, hostname: str, port: int):
     web.run_app(app, host=hostname, port=port)
 
 
+def update_host_ring(host: str, ring: HashRing):
+    message = ring.__dict__
+    requests.patch(f'http://{host}/', json.dumps(message))
+
+
 def main(args):
     args_dict = vars(parse_arguments(args))
     config = DatabaseConfig() if args_dict['database'] else RouterConfig()
@@ -60,8 +66,7 @@ def main(args):
         host = args_dict['update'][0]
         input_file = args_dict['update'][1]
         ring = load_ring(input_file)
-        message = ring.__dict__
-        requests.patch(f'http://{host}/', json.dumps(message))
+        update_host_ring(host, ring)
         sys.exit()
     if args_dict['get_config']:
         try:
