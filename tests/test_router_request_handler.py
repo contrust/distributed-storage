@@ -1,6 +1,7 @@
 from client.__main__ import get_value, insert_value, delete_value
 from hashring.ring import hash_to_32bit_int
-from server.router_request_handler import delete_ranges_from_host
+from server.router_request_handler import delete_ranges_from_host, \
+    add_host_ranges_to_another_host
 from tests.conftest import ROUTER_PORT, DATABASES_PORTS
 
 
@@ -54,3 +55,23 @@ def test_keys_within_ranges_are_deleted_after_delete_ranges_from_host():
                         get_value('localhost', DATABASES_PORTS[0], 'panama',
                                   key) != '')
     assert existing_keys == keys_hashes[hashes[0]]
+
+
+def test_keys_within_ranges_are_added_after_add_ranges_from_host():
+    two_hash = hash_to_32bit_int(b'2')
+    for key in '1', '2', '3':
+        insert_value('localhost', DATABASES_PORTS[0], 'panama', key,
+                     'some_value')
+        value = get_value('localhost', DATABASES_PORTS[0], 'panama', key)
+        assert value == 'some_value'
+        value = get_value('localhost', DATABASES_PORTS[1], 'panama', key)
+        assert value == ''
+    add_host_ranges_to_another_host(f'localhost:{DATABASES_PORTS[0]}',
+                                    f'localhost:{DATABASES_PORTS[1]}',
+                                    [[two_hash, two_hash + 1]])
+    for key in '1', '2', '3':
+        value = get_value('localhost', DATABASES_PORTS[1], 'panama', key)
+        if value:
+            assert key == '2'
+        else:
+            assert key in {'1', '3'}
