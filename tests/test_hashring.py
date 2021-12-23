@@ -81,6 +81,6 @@ def test_node_for_str_is_with_max_key_if_str_hash_less_than_all_keys():
     ring = HashRing(TWO_NODE_LIST, 0, 0)
     ring.keys[100] = 'localhost:2020'
     ring.keys[200] = 'localhost:2021'
-    key = 'makaka'
+    key = 'kaleidoscope'
     found_node = ring.find_node_for_string(key)
     assert found_node == 'localhost:2021'
