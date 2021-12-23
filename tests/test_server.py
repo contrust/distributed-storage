@@ -34,7 +34,7 @@ def test_rt_conf_file_is_created_after_get_config():
     assert db_conf_path.exists()
 
 
-def test_db_conf_file_is_created_with_standard_parameters():
+def test_rt_conf_file_is_created_with_standard_parameters():
     rt_conf_name = 'rt_conf'
     rt_conf = RouterConfig()
     args = f'-rt -g {rt_conf_name}'.split()
