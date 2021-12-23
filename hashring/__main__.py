@@ -51,8 +51,8 @@ def unload_ring(ring: HashRing, path: str):
         pickle.dump(ring, out, pickle.HIGHEST_PROTOCOL)
 
 
-def main():
-    args_dict = vars(parse_arguments(sys.argv[1:]))
+def main(args):
+    args_dict = vars(parse_arguments(args))
     if args_dict['add_host']:
         host = args_dict['add_host'][0]
         input_file = args_dict['add_host'][1]
@@ -90,4 +90,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

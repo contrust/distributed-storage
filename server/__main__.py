@@ -53,8 +53,8 @@ def run_server(handler: RequestHandler, hostname: str, port: int):
     web.run_app(app, host=hostname, port=port)
 
 
-def main():
-    args_dict = vars(parse_arguments(sys.argv[1:]))
+def main(args):
+    args_dict = vars(parse_arguments(args))
     config = DatabaseConfig() if args_dict['database'] else RouterConfig()
     if args_dict['update']:
         host = args_dict['update'][0]
@@ -95,4 +95,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])

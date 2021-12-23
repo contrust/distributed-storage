@@ -4,7 +4,7 @@ import sys
 import requests
 
 
-def parse_arguments():
+def parse_arguments(args):
     parser = argparse.ArgumentParser(
         prog=None if not globals().get('__spec__')
         else f'python3 -m {__spec__.name.partition(".")[0]}'
@@ -34,29 +34,47 @@ def parse_arguments():
     parser.add_argument('-V', '--value',
                         metavar='value',
                         required=('-INSERT' in sys.argv))
-    return parser.parse_args()
+    return parser.parse_args(args)
 
 
 def get_url(hostname: str, port: int, database: str, key: str):
     return f'http://{hostname}:{port}/{database}/{key}'
 
 
+def get_value(hostname: str, port: int, database: str, key: str):
+    url = get_url(hostname, port, database, key)
+    response = requests.get(url)
+    return response.text
+
+
+def insert_value(hostname: str, port: int, database: str, key: str, value: str):
+    url = get_url(hostname, port, database, key)
+    requests.post(url, data=value.encode('utf-8'))
+
+
+def delete_value(hostname: str, port: int, database: str, key: str):
+    url = get_url(hostname, port, database, key)
+    requests.delete(url)
+
+
 def main(args):
-    hostname = args["hostname"]
-    port = args["port"]
-    url = get_url(hostname, port, args["database"], args["key"])
+    args_dict = vars(parse_arguments(args))
+    hostname = args_dict["hostname"]
+    port = args_dict["port"]
+    db = args_dict['database']
+    key = args_dict['key']
     try:
-        if args['get']:
-            response = requests.get(url)
-            print(response.text)
-        elif args['insert']:
-            requests.post(url, data=args["value"].encode('utf-8'))
-        elif args['delete']:
-            requests.delete(url)
+        if args_dict['get']:
+            value = get_value(hostname, port, db, key)
+            print(value)
+        elif args_dict['insert']:
+            value = args_dict['value']
+            insert_value(hostname, port, db, key, value)
+        elif args_dict['delete']:
+            delete_value(hostname, port, db, key)
     except requests.ConnectionError:
         print(f'Error: can not connect to {hostname}:{port}.')
 
 
 if __name__ == '__main__':
-    arguments = vars(parse_arguments())
-    main(arguments)
+    main(sys.argv[1:])

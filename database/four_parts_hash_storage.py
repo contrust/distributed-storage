@@ -49,10 +49,7 @@ def get_values_by_key_path(key_path: Path):
 
 class FourPartsHashStorage(KVStorage):
     def __init__(self, directory: Path):
-        if directory.exists():
-            self.directory = directory
-        else:
-            raise ValueError(f'There\'s no path {directory}.')
+        self.directory = directory
         self.write_lock = Lock()
 
     def get(self, key):
@@ -68,9 +65,8 @@ class FourPartsHashStorage(KVStorage):
             hash_parts = get_hex_hash_parts_from_key(key)
             key_path = self.directory
             for i in range(3):
-                if not (key_path / hash_parts[i]).exists():
-                    (key_path / hash_parts[i]).mkdir()
                 key_path = (key_path / hash_parts[i])
+            key_path.mkdir(parents=True, exist_ok=True)
             key_path = get_key_path(self.directory, key)
             values = get_values_by_key_path(key_path)
             values[key] = value

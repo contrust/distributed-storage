@@ -12,11 +12,6 @@ def create_four_parts_hash_storage_in_current_directory():
     return storage
 
 
-def test_raise_value_error_is_database_directory_does_not_exist():
-    with pytest.raises(ValueError):
-        FourPartsHashStorage(Path('milkyway'))
-
-
 def test_create_file_if_key_has_not_been_in_storage():
     storage = create_four_parts_hash_storage_in_current_directory()
     key = 'koala'
