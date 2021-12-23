@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from hashring.__main__ import main, load_ring
+from hashring.__main__ import main, load_ring, show_ring_info
 from hashring.ring import HashRing
 
 ONE_NODE_LIST = ['localhost:2020']
@@ -149,3 +149,22 @@ def test_print_removed_node_after_removing_node(create_test_hashring, capsys):
     args = f'-a some_node {hashring_file_name}'.split()
     main(args)
     assert capsys.readouterr().out == 'Successfully added node some_node\n'
+
+
+def test_print_removed_node_after_removing_node(create_test_hashring, capsys):
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-a some_node {hashring_file_name}'.split()
+    main(args)
+    assert capsys.readouterr().out == 'Successfully added node some_node\n'
+
+
+def test_print_ring_info_after_i_command(create_test_hashring, capsys):
+    capsys.readouterr()
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-i {hashring_file_name}'.split()
+    main(args)
+    output = capsys.readouterr().out
+    ring = load_ring('test_hashring.pkl')
+    show_ring_info(ring)
+    output2 = capsys.readouterr().out
+    assert output == output2
