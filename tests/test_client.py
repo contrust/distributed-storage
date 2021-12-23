@@ -1,5 +1,5 @@
 from client.__main__ import main
-from test_database_request_handler import get_value, insert_value, delete_value
+from tests.test_database_request_handler import get_value, insert_value
 
 
 def test_print_inserted_value_when_get_key(capsys):
