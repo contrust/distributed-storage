@@ -68,35 +68,28 @@ def main(args):
         ring = load_ring(input_file)
         update_host_ring(host, ring)
         sys.exit()
-    if args_dict['get_config']:
-        try:
-            if args_dict['database']:
-                config.databases = {'dbname': 'db/path'}
-            else:
-                config.hash_ring_path = "hashring.pkl"
-            config.hostname = 'localhost'
-            config.port = 2020
-            config.unload(args_dict['get_config'])
-        finally:
-            sys.exit()
-    config.load(args_dict['run'])
-    if args_dict['database']:
-        try:
+    elif args_dict['get_config']:
+        if args_dict['database']:
+            config.databases = {'dbname': 'db/path'}
+        else:
+            config.hash_ring_path = "hashring.pkl"
+        config.hostname = 'localhost'
+        config.port = 2020
+        config.unload(args_dict['get_config'])
+    elif args_dict['run']:
+        config.load(args_dict['run'])
+        if args_dict['database']:
             databases = {name: FourPartsHashStorage(Path(directory))
                          for name, directory in config.databases.items()}
-        except ValueError as e:
-            print(e)
-            sys.exit()
-        handler = DatabaseRequestHandler(databases)
-    else:
-        with open(config.hash_ring_path, 'rb') as inp:
-            ring = pickle.load(inp)
-        handler = RouterRequestHandler(ring)
-    try:
-        run_server(handler=handler, hostname=config.hostname, port=config.port)
-    finally:
-        if args_dict['router']:
-            unload_ring(handler.hash_ring, config.hash_ring_path)
+            handler = DatabaseRequestHandler(databases)
+        else:
+            ring = load_ring(config.hash_ring_path)
+            handler = RouterRequestHandler(ring)
+        try:
+            run_server(handler=handler, hostname=config.hostname, port=config.port)
+        finally:
+            if args_dict['router']:
+                unload_ring(handler.hash_ring, config.hash_ring_path)
 
 
 def entry_point():
