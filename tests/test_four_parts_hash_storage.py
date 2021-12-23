@@ -1,8 +1,5 @@
 from pathlib import Path
 from unittest.mock import patch
-
-import pytest
-
 from database.four_parts_hash_storage import FourPartsHashStorage, get_key_path, \
     get_values_by_key_path
 
