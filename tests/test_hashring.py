@@ -1,11 +1,20 @@
 import pathlib
 from unittest.mock import patch
 
-from hashring.__main__ import main, unload_ring, load_ring
+import pytest
+
+from hashring.__main__ import main, load_ring
 from hashring.ring import HashRing
 
 ONE_NODE_LIST = ['localhost:2020']
 TWO_NODE_LIST = ['localhost:2020', 'localhost:2021']
+
+
+@pytest.fixture(scope="function")
+def create_test_hashring():
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-c 100 7 {hashring_file_name}'.split()
+    main(args)
 
 
 def test_keys_are_not_empty_after_init_if_keys_count_parameter_is_not_zero():
@@ -97,19 +106,46 @@ def test_file_created_after_create():
     assert hashring_path.exists()
 
 
-def test_created_file_contain_hashring_with_inserted_parameters():
-    hashring_file_name = 'test_hashring.pkl'
-    args = f'-c 100 7 {hashring_file_name}'.split()
-    main(args)
-    ring = load_ring(hashring_file_name)
+def test_created_file_contain_hashring_with_inserted_parameters(
+        create_test_hashring):
+    ring = load_ring('test_hashring.pkl')
     assert ring.replicas_number == 7
     assert ring.keys_for_node_count == 100
 
 
-def test_ring_in_created_file_has_no_keys_and_nodes():
-    hashring_file_name = 'test_hashring.pkl'
-    args = f'-c 100 7 {hashring_file_name}'.split()
-    main(args)
-    ring = load_ring(hashring_file_name)
+def test_ring_in_created_file_has_no_keys_and_nodes(create_test_hashring):
+    ring = load_ring('test_hashring.pkl')
     assert len(ring.keys) == 0
     assert len(ring.nodes) == 0
+
+
+def test_node_is_added_after_add_node(create_test_hashring):
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-a some_node {hashring_file_name}'.split()
+    main(args)
+    ring = load_ring(hashring_file_name)
+    assert 'some_node' in ring.nodes
+
+
+def test_print_added_node_add_node(create_test_hashring, capsys):
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-a some_node {hashring_file_name}'.split()
+    main(args)
+    assert capsys.readouterr().out == 'Successfully added node some_node\n'
+
+
+def test_node_is_removed_after_remove_node(create_test_hashring):
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-a some_node {hashring_file_name}'.split()
+    main(args)
+    args = f'-r some_node {hashring_file_name}'.split()
+    main(args)
+    ring = load_ring(hashring_file_name)
+    assert 'some_node' not in ring.nodes
+
+
+def test_print_removed_node_after_removing_node(create_test_hashring, capsys):
+    hashring_file_name = 'test_hashring.pkl'
+    args = f'-a some_node {hashring_file_name}'.split()
+    main(args)
+    assert capsys.readouterr().out == 'Successfully added node some_node\n'
