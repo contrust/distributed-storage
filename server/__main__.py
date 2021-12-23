@@ -1,6 +1,5 @@
 import argparse
 import json
-import pickle
 import sys
 from pathlib import Path
 from sys import argv
