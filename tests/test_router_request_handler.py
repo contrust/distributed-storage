@@ -64,6 +64,7 @@ def test_keys_within_ranges_are_added_after_add_ranges_from_host():
                      'some_value')
         value = get_value('localhost', DATABASES_PORTS[0], 'panama', key)
         assert value == 'some_value'
+    for key in '1', '2', '3':
         value = get_value('localhost', DATABASES_PORTS[1], 'panama', key)
         assert value == ''
     add_host_ranges_to_another_host(f'localhost:{DATABASES_PORTS[0]}',
